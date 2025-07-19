@@ -1,0 +1,177 @@
+# ServiceNow KB Offline Editor
+
+A powerful offline Knowledge Base editor for ServiceNow, built with TinyMCE WYSIWYG editor. Create, edit, and manage KB articles without requiring a ServiceNow instance.
+
+![Version](https://img.shields.io/badge/version-2.1-blue.svg)
+![License](https://img.shields.io/badge/license-GPL-green.svg)
+![TinyMCE](https://img.shields.io/badge/TinyMCE-6.x-orange.svg)
+
+## 🚀 Features
+
+### ✨ Rich Text Editing
+- **WYSIWYG Editor**: Full-featured TinyMCE editor with intuitive interface
+- **Text Formatting**: Bold, italic, underline, font family, size, and color controls
+- **Layout Tools**: Text alignment, lists, tables, and page breaks
+- **Advanced Features**: Links, images, full-screen mode, and source code view
+- **Auto-save**: Automatic saving with visual indicators
+
+### 📝 Article Management
+- **Create Articles**: Generate new KB articles with auto-assigned template IDs
+- **Metadata Support**: Title, category, status, and short description fields
+- **Status Tracking**: Draft, Ready for Review, and Authorized Usage states
+- **Search & Filter**: Find articles by title or description
+- **Delete Articles**: Remove articles with confirmation dialog
+
+### 💾 Data Management
+- **Local Storage**: All data saved in browser localStorage
+- **Import/Export**: JSON-based import and export functionality
+- **Duplicate Prevention**: Smart merging when importing existing articles
+- **Backup Support**: Export all articles for backup purposes
+
+### 🎨 User Interface
+- **Modern Design**: Clean, responsive interface with gradient background
+- **Sidebar Navigation**: Easy article browsing and management
+- **Status Indicators**: Visual badges showing article status
+- **Search Functionality**: Real-time search through article list
+
+## 📋 Requirements
+
+- Modern web browser with localStorage support
+- No internet connection required (fully offline)
+- No server setup needed
+
+## 🛠️ Installation
+
+1. **Download**: Clone or download this repository
+2. **Extract**: Unzip the files to your desired location
+3. **Open**: Open `snowkb-tinymce.html` in your web browser
+4. **Start Editing**: Begin creating your Knowledge Base articles
+
+## 📖 Usage
+
+### Creating a New Article
+
+1. Click the **"Create New Article"** button in the sidebar
+2. Fill in the metadata fields:
+   - **Title**: Enter the article title
+   - **Category**: Select from Procedures, Policies, or Troubleshooting
+   - **Status**: Choose Draft, Ready for Review, or Authorized Usage
+   - **Short Description**: Provide a brief summary (max 255 characters)
+3. Use the TinyMCE editor to create your content
+4. Content is automatically saved as you type
+
+### Managing Articles
+
+- **View Articles**: Click on any article in the sidebar to load it
+- **Search**: Use the search box to find specific articles
+- **Edit**: Make changes in the editor - auto-save is enabled
+- **Delete**: Click the "Delete" button to remove an article
+
+### Import/Export
+
+#### Exporting Articles
+1. Click the **"Save"** button in the header
+2. Choose a location to save the JSON file
+3. File will be named with current date: `servicenow-kb-articles-YYYY-MM-DD.json`
+
+#### Importing Articles
+1. Click the **"Load"** button in the header
+2. Select a previously exported JSON file
+3. Confirm the import to merge articles with existing ones
+4. Duplicate articles (by ID) will be automatically filtered
+
+## 🏗️ Project Structure
+
+```
+snowkb-tinymce/
+├── snowkb-tinymce.html      # Main application file
+├── tinymce/                 # TinyMCE editor library
+│   ├── tinymce.min.js      # Core TinyMCE library
+│   ├── plugins/            # TinyMCE plugins
+│   ├── themes/             # Editor themes
+│   └── skins/              # UI skins
+├── html2pdf/               # PDF generation library
+│   └── html2pdf.bundle.min.js
+└── README.md               # This file
+```
+
+## 🔧 Technical Details
+
+### Dependencies
+- **TinyMCE 6.x**: WYSIWYG editor with extensive plugin support
+- **HTML2PDF**: PDF generation library (included but not yet implemented in UI)
+
+### Browser Compatibility
+- Chrome 60+
+- Firefox 55+
+- Safari 12+
+- Edge 79+
+
+### Data Storage
+- **Format**: JSON
+- **Location**: Browser localStorage
+- **Key**: `servicenow-kb-articles`
+
+### Article Schema
+```json
+{
+  "id": "unique-article-id",
+  "kbNumber": "TP0000000",
+  "title": "Article Title",
+  "category": "procedures|policies|troubleshooting",
+  "status": "draft|review|published",
+  "shortDescription": "Brief description",
+  "content": "HTML content from TinyMCE",
+  "createdAt": 1234567890,
+  "updatedAt": 1234567890
+}
+```
+
+## 🎯 Use Cases
+
+- **Content Creation**: Write KB articles offline before publishing to ServiceNow
+- **Content Review**: Edit and review articles with team members
+- **Backup Management**: Export articles for backup and version control
+- **Training**: Use for training purposes without affecting production data
+- **Migration**: Prepare content for migration to ServiceNow
+
+## 🔮 Future Enhancements
+
+- [ ] PDF export functionality
+- [ ] Template system for common article types
+- [ ] Image upload and management
+- [ ] Collaborative editing features
+- [ ] Version history and tracking
+- [ ] Custom categories and metadata fields
+- [ ] Bulk operations (import/export multiple files)
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the GPL License - see the LICENSE file for details.
+
+## 🆘 Support
+
+For issues, questions, or feature requests:
+1. Check the existing issues in the repository
+2. Create a new issue with detailed information
+3. Include browser version and steps to reproduce
+
+## 🙏 Acknowledgments
+
+- **TinyMCE Team**: For the excellent WYSIWYG editor
+- **HTML2PDF**: For PDF generation capabilities
+- **ServiceNow Community**: For inspiration and feedback
+
+---
+
+**Version**: 2.1  
+**Last Updated**: 2025  
+**Maintainer**: ServiceNow KB Editor Team 
