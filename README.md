@@ -90,8 +90,7 @@ snowkb-tinymce/
 │   ├── plugins/            # TinyMCE plugins
 │   ├── themes/             # Editor themes
 │   └── skins/              # UI skins
-├── html2pdf/               # PDF generation library
-│   └── html2pdf.bundle.min.js
+
 └── README.md               # This file
 ```
 
@@ -99,7 +98,6 @@ snowkb-tinymce/
 
 ### Dependencies
 - **TinyMCE 6.x**: WYSIWYG editor with extensive plugin support
-- **HTML2PDF**: PDF generation library (included but not yet implemented in UI)
 
 ### Browser Compatibility
 - Chrome 60+
@@ -167,11 +165,10 @@ For issues, questions, or feature requests:
 ## 🙏 Acknowledgments
 
 - **TinyMCE Team**: For the excellent WYSIWYG editor
-- **HTML2PDF**: For PDF generation capabilities
 - **ServiceNow Community**: For inspiration and feedback
 
 ---
 
-**Version**: 2.1  
+**Version**: 3.0  
 **Last Updated**: 2025  
 **Maintainer**: ServiceNow KB Editor Team 
