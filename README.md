@@ -2,8 +2,8 @@
 
 A powerful offline Knowledge Base editor for ServiceNow, built with TinyMCE WYSIWYG editor. Create, edit, and manage KB articles without requiring a ServiceNow instance.
 
-![Version](https://img.shields.io/badge/version-2.1-blue.svg)
-![License](https://img.shields.io/badge/license-GPL-green.svg)
+![Version](https://img.shields.io/badge/version-3.0-blue.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![TinyMCE](https://img.shields.io/badge/TinyMCE-6.x-orange.svg)
 
 ## 🚀 Features
@@ -153,7 +153,7 @@ snowkb-tinymce/
 
 ## 📄 License
 
-This project is licensed under the GPL License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## 🆘 Support
 
