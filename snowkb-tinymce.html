@@ -1,14 +1,27 @@
+<!--
+    ServiceNow KB Offline Editor
+    --------------------------------
+    An offline knowledge base editor for ServiceNow, using TinyMCE for WYSIWYG editing.
+    Features: Create, edit, manage, import/export KB articles in localStorage.
+    Author: (Your Name/Team)
+    License: MIT
+-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="application-name" content="ServiceNow KB Offline Editor">
-    <meta name="version" content="3.0">
+    <meta name="version" content="4.0">
     <meta name="description" content="Offline ServiceNow KB editor, using TinyMCE">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ServiceNow KB Offline Editor</title>
-    <script src="tinymce/tinymce.min.js"></script>
+    <script src="libs/tinymce/tinymce.min.js"></script>
     <style>
+        /*
+            Main Stylesheet
+            ----------------
+            Styles for layout, typography, and UI components.
+        */
         body {
             font-family: Arial, sans-serif;
             line-height: 1.6;
@@ -279,12 +292,20 @@
     </div>
 
     <script>
-        // Main app state
+        // =========================
+        // Main Application State
+        // =========================
+        // articles: Array of all KB articles
+        // currentArticleId: ID of the currently loaded article
+        // lastSaved: Timestamp of last save (for auto-save logic)
         let articles = [];
         let currentArticleId = null;
         let lastSaved = Date.now();
         
-        // Initialize TinyMCE WYSIWYG editor
+        // =========================
+        // Initialize TinyMCE Editor
+        // =========================
+        // Sets up the WYSIWYG editor for article content
         tinymce.init({
             branding: false,
             license_key: 'gpl',
@@ -317,7 +338,10 @@
             }
         });
         
-        // DOM elements
+        // =========================
+        // DOM Element References
+        // =========================
+        // Cache frequently used DOM elements for performance
         const articlesList = document.getElementById('articles-list');
         const searchInput = document.getElementById('search-articles');
         const saveIndicator = document.getElementById('save-indicator');
@@ -337,19 +361,27 @@
         const exportBtn = document.getElementById('export-btn');
         const downloadAppBtn = document.getElementById('download-app');
         
-        // Load articles from localStorage
+        // =========================
+        // Article CRUD Functions
+        // =========================
+        /**
+         * Load articles from localStorage and render the list.
+         */
         function loadArticles() {
             const saved = localStorage.getItem('servicenow-kb-articles');
             articles = saved ? JSON.parse(saved) : [];
             renderArticlesList();
         }
-        
-        // Save articles to localStorage
+        /**
+         * Save the articles array to localStorage.
+         */
         function saveArticlesToStorage() {
             localStorage.setItem('servicenow-kb-articles', JSON.stringify(articles));
         }
-        
-        // Render the list of articles
+        /**
+         * Render the sidebar list of articles, optionally filtered by search term.
+         * @param {string} searchTerm
+         */
         function renderArticlesList(searchTerm = '') {
             articlesList.innerHTML = '';
             
@@ -409,8 +441,9 @@
                 articlesList.appendChild(articleEl);
             });
         }
-        
-        // Create a new article
+        /**
+         * Create a new blank article and load it into the editor.
+         */
         function createNewArticle() {
             const newArticle = {
                 id: Date.now().toString(),
@@ -429,13 +462,17 @@
             loadArticle(newArticle.id);
             renderArticlesList();
         }
-        
-        // Generate a KB number
+        /**
+         * Generate a random KB number for a new article.
+         * @returns {string}
+         */
         function generateKbNumber() {
             return `TP${Math.floor(Math.random() * 10000000).toString().padStart(7, '0')}`;
         }
-        
-        // Load an article into the editor
+        /**
+         * Load an article by ID into the editor and metadata fields.
+         * @param {string} id
+         */
         function loadArticle(id) {
             currentArticleId = id;
             const article = articles.find(a => a.id === id);
@@ -456,8 +493,9 @@
                 });
             }
         }
-        
-        // Save the current article
+        /**
+         * Save the currently loaded article with updated fields and content.
+         */
         function saveCurrentArticle() {
             if (!currentArticleId) return;
             
@@ -486,8 +524,9 @@
                 saveIndicator.textContent = '';
             }, 2000);
         }
-        
-        // Schedule auto-save
+        /**
+         * Schedule an auto-save if enough time has passed since the last save.
+         */
         function scheduleAutoSave() {
             saveIndicator.textContent = 'Editing...';
             
@@ -497,8 +536,9 @@
                 lastSaved = Date.now();
             }
         }
-        
-        // Delete the current article
+        /**
+         * Delete the currently loaded article after confirmation.
+         */
         function deleteCurrentArticle() {
             if (!currentArticleId) return;
             
@@ -518,8 +558,12 @@
                 renderArticlesList();
             }
         }
-        
-        // Export articles to JSON file
+        // =========================
+        // Import/Export Functions
+        // =========================
+        /**
+         * Export all articles to a JSON file for backup or migration.
+         */
         function exportArticles() {
             if (articles.length === 0) {
                 alert('No articles to export');
@@ -540,8 +584,9 @@
 
             URL.revokeObjectURL(url);
         }
-        
-        // Import articles from JSON file
+        /**
+         * Import articles from a JSON file, merging with existing ones.
+         */
         function importArticles() {
             const input = document.createElement('input');
             input.type = 'file';
@@ -582,7 +627,12 @@
         }
         
         
-        // Set up event listeners
+        // =========================
+        // UI & Event Handling
+        // =========================
+        /**
+         * Set up all event listeners for UI controls and form fields.
+         */
         function setupEventListeners() {
             // New article button
             newArticleBtn.addEventListener('click', createNewArticle);
@@ -613,7 +663,10 @@
             });
         }
         
-        // Initialize the app
+        // =========================
+        // App Initialization
+        // =========================
+        // Load articles and set up UI when the DOM is ready
         document.addEventListener('DOMContentLoaded', () => {
             loadArticles();
             setupEventListeners();
