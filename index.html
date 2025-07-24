@@ -342,6 +342,8 @@
         body:not(.dark-theme) #save-indicator {
             color: #000000 !important;
         }
+        
+
     </style>
 </head>
 <body>
@@ -455,9 +457,9 @@
         function initTinyMCE(skin = 'oxide') {
             const isDark = document.body.classList.contains('dark-theme');
             const contentStyle = isDark 
-                ? 'body { font-family:Arial,sans-serif; font-size:16px; background-color: #2c3e50; color: #ecf0f1; }'
-                : 'body { font-family:Arial,sans-serif; font-size:16px; background-color: #ffffff; color: #000000; }';
-                
+                ? 'body { font-family: Verdana, Arial, sans-serif; font-size: 12pt; background-color: #2c3e50; color: #ecf0f1; }'
+                : 'body { font-family: Verdana, Arial, sans-serif; font-size: 12pt; background-color: #ffffff; color: #000000; }';
+            
             tinymce.init({
                 branding: false,
                 license_key: 'gpl',
@@ -482,7 +484,13 @@
                 toolbar: 'bold italic underline blocks  fontfamily | ' +
                     'fontsize forecolor backcolor | alignleft aligncenter ' +
                     'alignright alignjustify \n bullist numlist outdent indent',
+                font_family_formats: 'Verdana=verdana,arial,sans-serif; Arial=arial,helvetica,sans-serif; Courier New=courier new,courier,monospace; Times New Roman=times new roman,times,serif; Georgia=georgia,palatino,serif;',
+                font_size_formats: '8pt 10pt 12pt 14pt 16pt 18pt 24pt 36pt',
                 content_style: contentStyle,
+                init_instance_callback: function (editor) {
+                    editor.execCommand('FontName', false, 'Verdana');
+                    editor.execCommand('FontSize', false, '12pt');
+                },
                 setup: function(editor) {
                     editor.on('Change', function() {
                         scheduleAutoSave();
