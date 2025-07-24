@@ -225,6 +225,36 @@
             background-color: #27ae60;
         }
         
+        /* Footer Styles */
+        footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 20px;
+            background-color: #2c3e50;
+            color: white;
+            border-radius: 5px;
+        }
+        
+        .footer-download {
+            display: inline-block;
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        .footer-download:hover {
+            background-color: #2980b9;
+        }
+        
+        /* Dark theme for footer */
+        body.dark-theme footer {
+            background-color: #34495e;
+        }
+        
         /* Dark Theme Styles */
         body.dark-theme {
             background: linear-gradient(to top, #1a1a2e, #16213e);
@@ -395,11 +425,17 @@
                     <div class="form-group">
                         <label for="article-content">Content</label>
                         <textarea id="article-content"></textarea>
-                    </div>
+                    </div>    
+                <footer>
+                    <a href="https://github.com/7ang0n1n3/snowkb-editor/archive/refs/heads/main.zip" class="footer-download" target="_blank">
+                        📥 Download
+                    </a>
+                </footer>
                 </div>
             </div>
         </div>
     </div>
+
 
     <script>
         // =========================
