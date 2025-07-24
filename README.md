@@ -173,6 +173,6 @@ For issues, questions, or feature requests:
 
 ---
 
-**Version**: 4.1  
+**Version**: 4.2  
 **Last Updated**: 2025  
 **Maintainer**: 7ANG0N1N3 
