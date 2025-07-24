@@ -11,7 +11,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="application-name" content="ServiceNow KB Offline Editor">
-    <meta name="version" content="4.0">
+    <meta name="version" content="4.1">
     <meta name="description" content="Offline ServiceNow KB editor, using TinyMCE">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ServiceNow KB Offline Editor</title>
@@ -47,6 +47,27 @@
             color: white;
             padding: 15px 20px;
             border-radius: 5px 5px 0 0;
+        }
+        
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        
+        .theme-toggle:hover {
+            background-color: rgba(255, 255, 255, 0.1);
         }
         
         h1 {
@@ -203,15 +224,104 @@
         .download-btn:hover {
             background-color: #27ae60;
         }
+        
+        /* Dark Theme Styles */
+        body.dark-theme {
+            background: linear-gradient(to top, #1a1a2e, #16213e);
+        }
+        
+        body.dark-theme .main-content {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+        }
+        
+        body.dark-theme .sidebar {
+            background-color: #34495e;
+            border-right-color: #4a5f7a;
+            color: #ecf0f1;
+        }
+        
+        body.dark-theme .metadata {
+            background-color: #34495e;
+            color: #ecf0f1;
+        }
+        
+        body.dark-theme input[type="text"],
+        body.dark-theme select,
+        body.dark-theme textarea {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            border-color: #4a5f7a;
+        }
+        
+        body.dark-theme .article-item:hover {
+            background-color: #4a5f7a;
+        }
+        
+        body.dark-theme .article-item.active {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        body.dark-theme .article-item {
+            color: #ecf0f1;
+        }
+        
+        /* Dark theme for status indicator */
+        body.dark-theme #save-indicator {
+            color: #ecf0f1 !important;
+        }
+        
+        /* Dark theme for TinyMCE content area */
+        body.dark-theme .tox-tinymce {
+            background-color: #2c3e50 !important;
+        }
+        
+        body.dark-theme .tox-edit-area {
+            background-color: #2c3e50 !important;
+        }
+        
+        body.dark-theme .tox-edit-area__iframe {
+            background-color: #2c3e50 !important;
+        }
+        
+        body.dark-theme .mce-content-body {
+            background-color: #2c3e50 !important;
+            color: #ecf0f1 !important;
+        }
+        
+        /* Light theme for TinyMCE content area */
+        body:not(.dark-theme) .tox-tinymce {
+            background-color: #ffffff !important;
+        }
+        
+        body:not(.dark-theme) .tox-edit-area {
+            background-color: #ffffff !important;
+        }
+        
+        body:not(.dark-theme) .tox-edit-area__iframe {
+            background-color: #ffffff !important;
+        }
+        
+        body:not(.dark-theme) .mce-content-body {
+            background-color: #ffffff !important;
+            color: #000000 !important;
+        }
+        
+        /* Light theme for status indicator */
+        body:not(.dark-theme) #save-indicator {
+            color: #000000 !important;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
             <h1>📖 ServiceNow KB Offline Editor</h1>
-            <div>
+            <div class="header-right">
                 <button id="import-btn" class="btn-secondary">Load</button>
                 <button id="export-btn">Save</button>
+                <button id="theme-toggle" class="theme-toggle" title="Toggle Dark Theme">🌙</button>
             </div>
         </header>
         
@@ -306,37 +416,44 @@
         // Initialize TinyMCE Editor
         // =========================
         // Sets up the WYSIWYG editor for article content
-        tinymce.init({
-            branding: false,
-            license_key: 'gpl',
-            selector: '#article-content',
-            height: 800,
-            width: 1000,
-            menubar: true,
-            plugins: [
-                'advlist', 'autolink', 'lists', 'link', 'charmap', 'preview',
-                'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                'insertdatetime', 'table', 'help', 'accordion', 'wordcount',
-                'pagebreak'
-            ],
-            menubar: 'edit insert format tools table help',
-            menu: {
-                tools: {
-                    title: 'Tools',
-                    items: 'preview fullscreen source code pagebreak visualblocks visualaid wordcount'
+        function initTinyMCE(skin = 'oxide') {
+            const isDark = document.body.classList.contains('dark-theme');
+            const contentStyle = isDark 
+                ? 'body { font-family:Arial,sans-serif; font-size:16px; background-color: #2c3e50; color: #ecf0f1; }'
+                : 'body { font-family:Arial,sans-serif; font-size:16px; background-color: #ffffff; color: #000000; }';
+                
+            tinymce.init({
+                branding: false,
+                license_key: 'gpl',
+                selector: '#article-content',
+                height: 800,
+                width: 1000,
+                skin: skin,
+                menubar: true,
+                plugins: [
+                    'advlist', 'autolink', 'lists', 'link', 'charmap', 'preview',
+                    'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                    'insertdatetime', 'table', 'help', 'accordion', 'wordcount',
+                    'pagebreak'
+                ],
+                menubar: 'edit insert format tools table help',
+                menu: {
+                    tools: {
+                        title: 'Tools',
+                        items: 'preview fullscreen source code pagebreak visualblocks visualaid wordcount'
+                    }
+                },
+                toolbar: 'bold italic underline blocks  fontfamily | ' +
+                    'fontsize forecolor backcolor | alignleft aligncenter ' +
+                    'alignright alignjustify \n bullist numlist outdent indent',
+                content_style: contentStyle,
+                setup: function(editor) {
+                    editor.on('Change', function() {
+                        scheduleAutoSave();
+                    });
                 }
-
-            },
-            toolbar: 'bold italic underline blocks  fontfamily | ' +
-                'fontsize forecolor backcolor | alignleft aligncenter ' +
-                'alignright alignjustify \n bullist numlist outdent indent',
-            content_style: 'body { font-family:Arial,sans-serif; font-size:16px }',
-            setup: function(editor) {
-                editor.on('Change', function() {
-                    scheduleAutoSave();
-                });
-            }
-        });
+            });
+        }
         
         // =========================
         // DOM Element References
@@ -360,6 +477,61 @@
         const importBtn = document.getElementById('import-btn');
         const exportBtn = document.getElementById('export-btn');
         const downloadAppBtn = document.getElementById('download-app');
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        
+        // =========================
+        // Theme Management
+        // =========================
+        /**
+         * Toggle between light and dark themes.
+         */
+        function toggleTheme() {
+            const body = document.body;
+            const isDark = body.classList.contains('dark-theme');
+            
+            if (isDark) {
+                body.classList.remove('dark-theme');
+                themeToggleBtn.textContent = '🌙';
+                themeToggleBtn.title = 'Toggle Dark Theme';
+                localStorage.setItem('theme', 'light');
+                updateTinyMCESkin('oxide');
+            } else {
+                body.classList.add('dark-theme');
+                themeToggleBtn.textContent = '☀️';
+                themeToggleBtn.title = 'Toggle Light Theme';
+                localStorage.setItem('theme', 'dark');
+                updateTinyMCESkin('oxide-dark');
+            }
+        }
+        
+        /**
+         * Load saved theme preference from localStorage.
+         */
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-theme');
+                themeToggleBtn.textContent = '☀️';
+                themeToggleBtn.title = 'Toggle Light Theme';
+                return 'dark';
+            }
+            return 'light';
+        }
+        
+        /**
+         * Update TinyMCE skin to match the current theme.
+         * @param {string} skin - 'oxide' for light, 'oxide-dark' for dark
+         */
+        function updateTinyMCESkin(skin) {
+            const editor = tinymce.get('article-content');
+            if (editor) {
+                // Remove existing editor
+                editor.remove();
+                
+                // Reinitialize with new skin
+                initTinyMCE(skin);
+            }
+        }
         
         // =========================
         // Article CRUD Functions
@@ -648,6 +820,9 @@
             
             // Import button
             importBtn.addEventListener('click', importArticles);
+            
+            // Theme toggle button
+            themeToggleBtn.addEventListener('click', toggleTheme);
 
             
             // Form field change events for auto-save
@@ -668,8 +843,16 @@
         // =========================
         // Load articles and set up UI when the DOM is ready
         document.addEventListener('DOMContentLoaded', () => {
+            const currentTheme = loadTheme(); // Load saved theme preference
             loadArticles();
             setupEventListeners();
+            
+            // Initialize TinyMCE with appropriate skin
+            if (currentTheme === 'dark') {
+                initTinyMCE('oxide-dark');
+            } else {
+                initTinyMCE('oxide');
+            }
         });
     </script>
 </body>

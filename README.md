@@ -2,7 +2,7 @@
 
 A powerful offline Knowledge Base editor for ServiceNow, built with TinyMCE WYSIWYG editor. Create, edit, and manage KB articles without requiring a ServiceNow instance.
 
-![Version](https://img.shields.io/badge/version-3.0-blue.svg)
+![Version](https://img.shields.io/badge/version-4.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![TinyMCE](https://img.shields.io/badge/TinyMCE-6.x-orange.svg)
 
@@ -30,6 +30,7 @@ A powerful offline Knowledge Base editor for ServiceNow, built with TinyMCE WYSI
 
 ### 🎨 User Interface
 - **Modern Design**: Clean, responsive interface with gradient background
+- **Dark/Light Theme**: Toggle between dark and light themes for comfortable editing
 - **Sidebar Navigation**: Easy article browsing and management
 - **Status Indicators**: Visual badges showing article status
 - **Search Functionality**: Real-time search through article list
@@ -44,7 +45,7 @@ A powerful offline Knowledge Base editor for ServiceNow, built with TinyMCE WYSI
 
 1. **Download**: Clone or download this repository
 2. **Extract**: Unzip the files to your desired location
-3. **Open**: Open `snowkb-tinymce.html` in your web browser
+3. **Open**: Open `index.html` in your web browser
 4. **Start Editing**: Begin creating your Knowledge Base articles
 
 ## 📖 Usage
@@ -66,6 +67,7 @@ A powerful offline Knowledge Base editor for ServiceNow, built with TinyMCE WYSI
 - **Search**: Use the search box to find specific articles
 - **Edit**: Make changes in the editor - auto-save is enabled
 - **Delete**: Click the "Delete" button to remove an article
+- **Theme Toggle**: Click the moon/sun icon in the top-right to switch between dark and light themes
 
 ### Import/Export
 
@@ -83,15 +85,16 @@ A powerful offline Knowledge Base editor for ServiceNow, built with TinyMCE WYSI
 ## 🏗️ Project Structure
 
 ```
-snowkb-tinymce/
-├── snowkb-tinymce.html      # Main application file
-├── tinymce/                 # TinyMCE editor library
-│   ├── tinymce.min.js      # Core TinyMCE library
-│   ├── plugins/            # TinyMCE plugins
-│   ├── themes/             # Editor themes
-│   └── skins/              # UI skins
-
-└── README.md               # This file
+snowkb-editor/
+├── index.html              # Main application file
+├── libs/                   # Third-party libraries
+│   └── tinymce/           # TinyMCE editor library
+│       ├── tinymce.min.js # Core TinyMCE library
+│       ├── plugins/       # TinyMCE plugins
+│       ├── themes/        # Editor themes
+│       └── skins/         # UI skins (including dark theme)
+├── LICENSE                 # MIT License
+└── README.md              # This file
 ```
 
 ## 🔧 Technical Details
@@ -135,6 +138,7 @@ snowkb-tinymce/
 
 ## 🔮 Future Enhancements
 
+- [x] Dark/Light theme toggle
 - [ ] PDF export functionality
 - [ ] Template system for common article types
 - [ ] Image upload and management
@@ -169,6 +173,6 @@ For issues, questions, or feature requests:
 
 ---
 
-**Version**: 3.0  
+**Version**: 4.1  
 **Last Updated**: 2025  
-**Maintainer**: ServiceNow KB Editor Team 
+**Maintainer**: 7ANG0N1N3 
