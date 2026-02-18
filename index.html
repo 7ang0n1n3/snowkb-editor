@@ -11,7 +11,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="application-name" content="ServiceNow KB Offline Editor">
-    <meta name="version" content="4.3">
+    <meta name="version" content="4.4">
     <meta name="description" content="Offline ServiceNow KB editor, using TinyMCE">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ServiceNow KB Offline Editor</title>
@@ -121,7 +121,7 @@
         
         .article-list {
             margin-top: 20px;
-            max-height: 500px;
+            max-height: calc(100vh - 280px);
             overflow-y: auto;
         }
         
@@ -380,6 +380,7 @@
                         <div>
                             <button id="save-btn" class="btn-success">Save</button>
                             <button id="delete-btn" class="btn-danger">Delete</button>
+                            <button id="export-article-btn" class="btn-secondary">Export Article</button>
                             <span id="save-indicator" style="margin-left: 10px; color: black;"></span>
                         </div>
                     </div>
@@ -408,12 +409,11 @@
                         <div class="metadata-grid">
                             <div class="form-group">
                                 <label for="article-category">Category</label>
-                                <select id="article-category">
-                                    <option value="">-- Select Category --</option>
-                                    <option value="procedures">Procedures</option>
-                                    <option value="policies">Policies</option>
-                                    <option value="troubleshooting">Troubleshooting</option>
-                                </select>
+                                <div style="display:flex; gap:6px; align-items:center;">
+                                    <select id="article-category" style="flex:1;"></select>
+                                    <button type="button" id="add-category-btn" class="btn-secondary" title="Add category" style="padding:6px 10px; margin:0; flex-shrink:0;">+</button>
+                                    <button type="button" id="remove-category-btn" class="btn-danger" title="Remove category" style="padding:6px 10px; margin:0; flex-shrink:0;">−</button>
+                                </div>
                             </div>
                         </div>
                         
@@ -448,6 +448,7 @@
         let articles = [];
         let currentArticleId = null;
         let autoSaveTimer = null;
+        let searchTimer = null;
         
         // =========================
         // Initialize TinyMCE Editor
@@ -464,7 +465,7 @@
                 license_key: 'gpl',
                 selector: '#article-content',
                 height: 800,
-                width: 1000,
+                width: '100%',
                 skin: skin,
                 plugins: [
                     'advlist', 'autolink', 'lists', 'link', 'charmap', 'preview',
@@ -493,6 +494,7 @@
                     editor.on('Change', function() {
                         scheduleAutoSave();
                     });
+                    editor.addShortcut('meta+s', 'Save article', saveCurrentArticle);
                 }
             });
         }
@@ -566,14 +568,112 @@
         function updateTinyMCESkin(skin) {
             const editor = tinymce.get('article-content');
             if (editor) {
-                // Remove existing editor
+                // Flush any debounce-pending edits before destroying the editor
+                saveCurrentArticle();
                 editor.remove();
-                
-                // Reinitialize with new skin
                 initTinyMCE(skin);
             }
         }
         
+        // =========================
+        // Category Management
+        // =========================
+        const DEFAULT_CATEGORIES = [
+            { value: 'procedures',      label: 'Procedures' },
+            { value: 'policies',        label: 'Policies' },
+            { value: 'troubleshooting', label: 'Troubleshooting' }
+        ];
+
+        /**
+         * Return the full list of categories: defaults + any user-created ones.
+         * @returns {Array<{value:string, label:string}>}
+         */
+        function loadCategories() {
+            try {
+                const saved = localStorage.getItem('servicenow-kb-categories');
+                const custom = saved ? JSON.parse(saved) : [];
+                return [...DEFAULT_CATEGORIES, ...custom];
+            } catch (err) {
+                return [...DEFAULT_CATEGORIES];
+            }
+        }
+
+        /**
+         * Persist the custom (non-default) categories to localStorage.
+         * @param {Array<{value:string, label:string}>} custom
+         */
+        function saveCustomCategories(custom) {
+            localStorage.setItem('servicenow-kb-categories', JSON.stringify(custom));
+        }
+
+        /**
+         * Rebuild the category <select> options, preserving the current selection.
+         */
+        function renderCategorySelect() {
+            const currentValue = categorySelect.value;
+            categorySelect.innerHTML = '';
+            const placeholder = document.createElement('option');
+            placeholder.value = '';
+            placeholder.textContent = '-- Select Category --';
+            categorySelect.appendChild(placeholder);
+            loadCategories().forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat.value;
+                opt.textContent = cat.label;
+                categorySelect.appendChild(opt);
+            });
+            // Restore selection if the value still exists
+            categorySelect.value = currentValue;
+        }
+
+        /**
+         * Prompt the user for a new category name and add it.
+         */
+        function addCategory() {
+            const raw = prompt('Enter new category name:');
+            if (!raw) return;
+            const label = raw.trim();
+            if (!label) return;
+            const value = label.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+            const all = loadCategories();
+            if (all.some(c => c.value === value)) {
+                alert('A category with that name already exists.');
+                return;
+            }
+            const saved = (() => {
+                try {
+                    const s = localStorage.getItem('servicenow-kb-categories');
+                    return s ? JSON.parse(s) : [];
+                } catch (e) { return []; }
+            })();
+            saved.push({ value, label });
+            saveCustomCategories(saved);
+            renderCategorySelect();
+            categorySelect.value = value;
+        }
+
+        /**
+         * Remove the currently selected category if it is not a default.
+         */
+        function removeCategory() {
+            const value = categorySelect.value;
+            if (!value) { alert('No category selected.'); return; }
+            if (DEFAULT_CATEGORIES.some(c => c.value === value)) {
+                alert('Built-in categories cannot be removed.');
+                return;
+            }
+            if (!confirm(`Remove category "${categorySelect.options[categorySelect.selectedIndex].text}"?`)) return;
+            const saved = (() => {
+                try {
+                    const s = localStorage.getItem('servicenow-kb-categories');
+                    return s ? JSON.parse(s) : [];
+                } catch (e) { return []; }
+            })();
+            const updated = saved.filter(c => c.value !== value);
+            saveCustomCategories(updated);
+            renderCategorySelect();
+        }
+
         // =========================
         // Article CRUD Functions
         // =========================
@@ -581,15 +681,28 @@
          * Load articles from localStorage and render the list.
          */
         function loadArticles() {
-            const saved = localStorage.getItem('servicenow-kb-articles');
-            articles = saved ? JSON.parse(saved) : [];
+            try {
+                const saved = localStorage.getItem('servicenow-kb-articles');
+                articles = saved ? JSON.parse(saved) : [];
+            } catch (err) {
+                articles = [];
+                alert('Could not load saved articles (storage error). Starting fresh.\n\n' + err.message);
+            }
             renderArticlesList();
         }
         /**
          * Save the articles array to localStorage.
          */
         function saveArticlesToStorage() {
-            localStorage.setItem('servicenow-kb-articles', JSON.stringify(articles));
+            try {
+                localStorage.setItem('servicenow-kb-articles', JSON.stringify(articles));
+            } catch (err) {
+                if (err.name === 'QuotaExceededError' || err.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+                    alert('Storage quota exceeded — your changes could not be saved. Export your articles to free up space.');
+                } else {
+                    alert('Failed to save articles: ' + err.message);
+                }
+            }
         }
         /**
          * Escape HTML special characters to prevent XSS.
@@ -600,6 +713,24 @@
             const div = document.createElement('div');
             div.textContent = String(str);
             return div.innerHTML;
+        }
+
+        /**
+         * Strip scripts and inline event handlers from imported HTML content.
+         * @param {string} html
+         * @returns {string}
+         */
+        function sanitizeHtml(html) {
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            doc.querySelectorAll('script').forEach(el => el.remove());
+            doc.querySelectorAll('*').forEach(el => {
+                Array.from(el.attributes).forEach(attr => {
+                    if (attr.name.toLowerCase().startsWith('on')) el.removeAttribute(attr.name);
+                });
+                if (el.tagName === 'A' && /^javascript:/i.test(el.getAttribute('href') || ''))
+                    el.removeAttribute('href');
+            });
+            return doc.body.innerHTML;
         }
 
         /**
@@ -670,7 +801,7 @@
          */
         function createNewArticle() {
             const newArticle = {
-                id: Date.now().toString(),
+                id: crypto.randomUUID(),
                 kbNumber: generateKbNumber(),
                 title: '',
                 category: '',
@@ -814,6 +945,24 @@
             URL.revokeObjectURL(url);
         }
         /**
+         * Export the currently open article as a single-element JSON array.
+         */
+        function exportCurrentArticle() {
+            if (!currentArticleId) return;
+            const article = articles.find(a => a.id === currentArticleId);
+            if (!article) return;
+            const blob = new Blob([JSON.stringify([article], null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${article.kbNumber}-${(article.title || 'untitled').replace(/[^a-z0-9]/gi, '-').toLowerCase()}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        /**
          * Validate that an object has the minimum required article fields.
          * @param {*} a
          * @returns {boolean}
@@ -856,7 +1005,9 @@
                             if (confirm(msg)) {
                                 // Merge with existing articles, avoiding duplicates by ID
                                 const existingIds = new Set(articles.map(a => a.id));
-                                const newArticles = validArticles.filter(a => !existingIds.has(a.id));
+                                const newArticles = validArticles
+                                    .filter(a => !existingIds.has(a.id))
+                                    .map(a => ({ ...a, content: sanitizeHtml(a.content) }));
 
                                 articles = [...articles, ...newArticles];
                                 saveArticlesToStorage();
@@ -887,33 +1038,50 @@
         function setupEventListeners() {
             // New article button
             newArticleBtn.addEventListener('click', createNewArticle);
-            
+
             // Save button
             saveBtn.addEventListener('click', saveCurrentArticle);
-            
+
             // Delete button
             deleteBtn.addEventListener('click', deleteCurrentArticle);
-            
-            // Export button
+
+            // Export current article button
+            document.getElementById('export-article-btn').addEventListener('click', exportCurrentArticle);
+
+            // Export all button
             exportBtn.addEventListener('click', exportArticles);
-            
+
             // Import button
             importBtn.addEventListener('click', importArticles);
-            
+
             // Theme toggle button
             themeToggleBtn.addEventListener('click', toggleTheme);
 
-            
+            // Category add / remove buttons
+            document.getElementById('add-category-btn').addEventListener('click', addCategory);
+            document.getElementById('remove-category-btn').addEventListener('click', removeCategory);
+
             // Form field change events for auto-save
-            const formFields = [titleInput, categorySelect, statusSelect,shortDescInput];
+            const formFields = [titleInput, categorySelect, statusSelect, shortDescInput];
             formFields.forEach(field => {
                 field.addEventListener('input', scheduleAutoSave);
                 field.addEventListener('change', scheduleAutoSave);
             });
-            
-            // Search
+
+            // Search — debounced 200 ms
             searchInput.addEventListener('input', (e) => {
-                renderArticlesList(e.target.value);
+                clearTimeout(searchTimer);
+                searchTimer = setTimeout(() => {
+                    renderArticlesList(e.target.value);
+                }, 200);
+            });
+
+            // Global Ctrl+S / Cmd+S to save
+            document.addEventListener('keydown', e => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                    e.preventDefault();
+                    saveCurrentArticle();
+                }
             });
         }
         
@@ -923,6 +1091,7 @@
         // Load articles and set up UI when the DOM is ready
         document.addEventListener('DOMContentLoaded', () => {
             const currentTheme = loadTheme(); // Load saved theme preference
+            renderCategorySelect();
             loadArticles();
             setupEventListeners();
             
