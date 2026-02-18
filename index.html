@@ -11,7 +11,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="application-name" content="ServiceNow KB Offline Editor">
-    <meta name="version" content="4.2">
+    <meta name="version" content="4.3">
     <meta name="description" content="Offline ServiceNow KB editor, using TinyMCE">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ServiceNow KB Offline Editor</title>
@@ -30,7 +30,6 @@
             height: 100vh;
             background: linear-gradient(to top, darkblue, lightblue);
             background-attachment: fixed;
-            /* background-color: black; */
         }
         
         .container {
@@ -427,16 +426,16 @@
                     <div class="form-group">
                         <label for="article-content">Content</label>
                         <textarea id="article-content"></textarea>
-                    </div>    
-                <footer>
-                    <a href="https://github.com/7ang0n1n3/snowkb-editor/archive/refs/heads/main.zip" class="footer-download" target="_blank">
-                        📥 Download
-                    </a>
-                </footer>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+    <footer>
+        <a href="https://github.com/7ang0n1n3/snowkb-editor/archive/refs/heads/main.zip" class="footer-download" target="_blank">
+            📥 Download
+        </a>
+    </footer>
 
 
     <script>
@@ -445,10 +444,10 @@
         // =========================
         // articles: Array of all KB articles
         // currentArticleId: ID of the currently loaded article
-        // lastSaved: Timestamp of last save (for auto-save logic)
+        // autoSaveTimer: setTimeout handle for debounced auto-save
         let articles = [];
         let currentArticleId = null;
-        let lastSaved = Date.now();
+        let autoSaveTimer = null;
         
         // =========================
         // Initialize TinyMCE Editor
@@ -467,7 +466,6 @@
                 height: 800,
                 width: 1000,
                 skin: skin,
-                menubar: true,
                 plugins: [
                     'advlist', 'autolink', 'lists', 'link', 'charmap', 'preview',
                     'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
@@ -520,7 +518,6 @@
         const deleteBtn = document.getElementById('delete-btn');
         const importBtn = document.getElementById('import-btn');
         const exportBtn = document.getElementById('export-btn');
-        const downloadAppBtn = document.getElementById('download-app');
         const themeToggleBtn = document.getElementById('theme-toggle');
         
         // =========================
@@ -595,6 +592,17 @@
             localStorage.setItem('servicenow-kb-articles', JSON.stringify(articles));
         }
         /**
+         * Escape HTML special characters to prevent XSS.
+         * @param {string} str
+         * @returns {string}
+         */
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = String(str);
+            return div.innerHTML;
+        }
+
+        /**
          * Render the sidebar list of articles, optionally filtered by search term.
          * @param {string} searchTerm
          */
@@ -645,11 +653,11 @@
                 
                 articleEl.innerHTML = `
                     <div style="font-weight: bold;">
-                        ${article.title || 'Untitled Article'}
+                        ${escapeHtml(article.title || 'Untitled Article')}
                         <span class="status-badge ${statusClass}">${statusText}</span>
                     </div>
                     <div style="font-size: 12px; color: #7f8c8d; margin-top: 5px;">
-                        ${article.kbNumber} · Updated: ${new Date(article.updatedAt).toLocaleDateString()}
+                        ${escapeHtml(article.kbNumber)} · Updated: ${new Date(article.updatedAt).toLocaleDateString()}
                     </div>
                 `;
                 
@@ -683,7 +691,9 @@
          * @returns {string}
          */
         function generateKbNumber() {
-            return `TP${Math.floor(Math.random() * 10000000).toString().padStart(7, '0')}`;
+            const arr = new Uint32Array(1);
+            crypto.getRandomValues(arr);
+            return `TP${(arr[0] % 10000000).toString().padStart(7, '0')}`;
         }
         /**
          * Load an article by ID into the editor and metadata fields.
@@ -701,7 +711,8 @@
                 shortDescInput.value = article.shortDescription || '';
                 
                 // Update TinyMCE content
-                tinymce.get('article-content').setContent(article.content || '');
+                const editor = tinymce.get('article-content');
+                if (editor) editor.setContent(article.content || '');
                 
                 // Update active article in the list
                 document.querySelectorAll('.article-item').forEach(el => {
@@ -719,7 +730,9 @@
             if (articleIndex === -1) return;
             
             // Get content from TinyMCE
-            const content = tinymce.get('article-content').getContent();
+            const editor = tinymce.get('article-content');
+            if (!editor) return;
+            const content = editor.getContent();
             
             articles[articleIndex] = {
                 ...articles[articleIndex],
@@ -741,16 +754,15 @@
             }, 2000);
         }
         /**
-         * Schedule an auto-save if enough time has passed since the last save.
+         * Debounce auto-save: waits 1 second after the last edit before saving.
+         * Guarantees all changes are captured, even rapid edits.
          */
         function scheduleAutoSave() {
             saveIndicator.textContent = 'Editing...';
-            
-            // Only save if more than 2 seconds since last save
-            if (Date.now() - lastSaved > 2000) {
+            clearTimeout(autoSaveTimer);
+            autoSaveTimer = setTimeout(() => {
                 saveCurrentArticle();
-                lastSaved = Date.now();
-            }
+            }, 1000);
         }
         /**
          * Delete the currently loaded article after confirmation.
@@ -769,7 +781,8 @@
                 categorySelect.value = '';
                 statusSelect.value = 'draft';
                 shortDescInput.value = '';
-                tinymce.get('article-content').setContent('');
+                const editor = tinymce.get('article-content');
+                if (editor) editor.setContent('');
                 
                 renderArticlesList();
             }
@@ -801,6 +814,19 @@
             URL.revokeObjectURL(url);
         }
         /**
+         * Validate that an object has the minimum required article fields.
+         * @param {*} a
+         * @returns {boolean}
+         */
+        function isValidArticle(a) {
+            return a && typeof a === 'object'
+                && typeof a.id === 'string'
+                && typeof a.title === 'string'
+                && typeof a.kbNumber === 'string'
+                && typeof a.content === 'string';
+        }
+
+        /**
          * Import articles from a JSON file, merging with existing ones.
          */
         function importArticles() {
@@ -818,15 +844,24 @@
                         const importedArticles = JSON.parse(event.target.result);
                         
                         if (Array.isArray(importedArticles)) {
-                            if (confirm(`Import ${importedArticles.length} articles? This will merge with your existing articles.`)) {
+                            const validArticles = importedArticles.filter(isValidArticle);
+                            if (validArticles.length === 0) {
+                                alert('No valid articles found in the file.');
+                                return;
+                            }
+                            const skipped = importedArticles.length - validArticles.length;
+                            const msg = skipped > 0
+                                ? `Import ${validArticles.length} valid articles? (${skipped} invalid entries will be skipped) This will merge with your existing articles.`
+                                : `Import ${validArticles.length} articles? This will merge with your existing articles.`;
+                            if (confirm(msg)) {
                                 // Merge with existing articles, avoiding duplicates by ID
                                 const existingIds = new Set(articles.map(a => a.id));
-                                const newArticles = importedArticles.filter(a => !existingIds.has(a.id));
-                                
+                                const newArticles = validArticles.filter(a => !existingIds.has(a.id));
+
                                 articles = [...articles, ...newArticles];
                                 saveArticlesToStorage();
                                 renderArticlesList();
-                                
+
                                 alert(`Successfully imported ${newArticles.length} articles.`);
                             }
                         } else {

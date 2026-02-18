@@ -2,7 +2,7 @@
 
 A powerful offline Knowledge Base editor for ServiceNow, built with TinyMCE WYSIWYG editor. Create, edit, and manage KB articles without requiring a ServiceNow instance.
 
-![Version](https://img.shields.io/badge/version-4.0-blue.svg)
+![Version](https://img.shields.io/badge/version-4.3-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![TinyMCE](https://img.shields.io/badge/TinyMCE-6.x-orange.svg)
 
@@ -13,7 +13,7 @@ A powerful offline Knowledge Base editor for ServiceNow, built with TinyMCE WYSI
 - **Text Formatting**: Bold, italic, underline, font family, size, and color controls
 - **Layout Tools**: Text alignment, lists, tables, and page breaks
 - **Advanced Features**: Links, images, full-screen mode, and source code view
-- **Auto-save**: Automatic saving with visual indicators
+- **Auto-save**: Debounced auto-save (1 second after last edit) with visual indicators
 
 ### 📝 Article Management
 - **Create Articles**: Generate new KB articles with auto-assigned template IDs
@@ -26,6 +26,7 @@ A powerful offline Knowledge Base editor for ServiceNow, built with TinyMCE WYSI
 - **Local Storage**: All data saved in browser localStorage
 - **Import/Export**: JSON-based import and export functionality
 - **Duplicate Prevention**: Smart merging when importing existing articles
+- **Import Validation**: Malformed or invalid entries are detected and skipped during import
 - **Backup Support**: Export all articles for backup purposes
 
 ### 🎨 User Interface
@@ -72,12 +73,12 @@ A powerful offline Knowledge Base editor for ServiceNow, built with TinyMCE WYSI
 ### Import/Export
 
 #### Exporting Articles
-1. Click the **"Save"** button in the header
+1. Click the **"Save JSON"** button in the header
 2. Choose a location to save the JSON file
 3. File will be named with current date: `servicenow-kb-articles-YYYY-MM-DD.json`
 
 #### Importing Articles
-1. Click the **"Load"** button in the header
+1. Click the **"Load JSON"** button in the header
 2. Select a previously exported JSON file
 3. Confirm the import to merge articles with existing ones
 4. Duplicate articles (by ID) will be automatically filtered
@@ -173,6 +174,6 @@ For issues, questions, or feature requests:
 
 ---
 
-**Version**: 4.2  
-**Last Updated**: 2025  
-**Maintainer**: 7ANG0N1N3 
+**Version**: 4.3
+**Last Updated**: 2026
+**Maintainer**: 7ANG0N1N3
