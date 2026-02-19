@@ -168,7 +168,7 @@ snowkb-editor/
 - [x] Version history and tracking (per-article snapshots, restore, max 5)
 - [ ] PDF export functionality
 - [ ] Template system for common article types
-- [ ] Image upload and management
+
 
 ## 🤝 Contributing
 
