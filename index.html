@@ -11,7 +11,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="application-name" content="ServiceNow KB Offline Editor">
-    <meta name="version" content="4.4">
+    <meta name="version" content="4.5">
     <meta name="description" content="Offline ServiceNow KB editor, using TinyMCE">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ServiceNow KB Offline Editor</title>
@@ -341,7 +341,51 @@
         body:not(.dark-theme) #save-indicator {
             color: #000000 !important;
         }
-        
+
+        /* Version History Modal */
+        .history-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .history-modal-content {
+            background: #fff;
+            border-radius: 6px;
+            padding: 20px;
+            width: 500px;
+            max-height: 70vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        body.dark-theme .history-modal-content {
+            background: #2c3e50;
+            color: #ecf0f1;
+        }
+
+        body.dark-theme .history-item {
+            border-bottom-color: #4a5f7a;
+        }
 
     </style>
 </head>
@@ -381,6 +425,7 @@
                             <button id="save-btn" class="btn-success">Save</button>
                             <button id="delete-btn" class="btn-danger">Delete</button>
                             <button id="export-article-btn" class="btn-secondary">Export Article</button>
+                            <button id="history-btn" class="btn-secondary">History</button>
                             <span id="save-indicator" style="margin-left: 10px; color: black;"></span>
                         </div>
                     </div>
@@ -431,6 +476,18 @@
             </div>
         </div>
     </div>
+
+    <!-- Version History Modal -->
+    <div id="history-modal" class="history-modal" style="display:none;">
+        <div class="history-modal-content">
+            <h3 style="margin-top:0;">Version History</h3>
+            <div id="history-list"></div>
+            <div style="text-align:right; margin-top:15px;">
+                <button id="history-close-btn" class="btn-secondary">Close</button>
+            </div>
+        </div>
+    </div>
+
     <footer>
         <a href="https://github.com/7ang0n1n3/snowkb-editor/archive/refs/heads/main.zip" class="footer-download" target="_blank">
             📥 Download
@@ -494,7 +551,7 @@
                     editor.on('Change', function() {
                         scheduleAutoSave();
                     });
-                    editor.addShortcut('meta+s', 'Save article', saveCurrentArticle);
+                    editor.addShortcut('meta+s', 'Save article', () => saveCurrentArticle(true));
                 }
             });
         }
@@ -853,18 +910,30 @@
         }
         /**
          * Save the currently loaded article with updated fields and content.
+         * @param {boolean} captureVersion - When true, also saves a version snapshot.
          */
-        function saveCurrentArticle() {
+        function saveCurrentArticle(captureVersion = false) {
             if (!currentArticleId) return;
-            
+
             const articleIndex = articles.findIndex(a => a.id === currentArticleId);
             if (articleIndex === -1) return;
-            
+
             // Get content from TinyMCE
             const editor = tinymce.get('article-content');
             if (!editor) return;
             const content = editor.getContent();
-            
+
+            if (captureVersion) {
+                captureVersionSnapshot({
+                    articleId: currentArticleId,
+                    title: titleInput.value,
+                    category: categorySelect.value,
+                    status: statusSelect.value,
+                    shortDescription: shortDescInput.value,
+                    content: content
+                });
+            }
+
             articles[articleIndex] = {
                 ...articles[articleIndex],
                 title: titleInput.value,
@@ -874,10 +943,10 @@
                 content: content,
                 updatedAt: Date.now()
             };
-            
+
             saveArticlesToStorage();
             renderArticlesList();
-            
+
             // Show save confirmation
             saveIndicator.textContent = 'Saved!';
             setTimeout(() => {
@@ -900,10 +969,21 @@
          */
         function deleteCurrentArticle() {
             if (!currentArticleId) return;
-            
+
             if (confirm('Are you sure you want to delete this article?')) {
-                articles = articles.filter(a => a.id !== currentArticleId);
+                const deletedId = currentArticleId;
+                articles = articles.filter(a => a.id !== deletedId);
                 saveArticlesToStorage();
+
+                // Prune version history for the deleted article
+                try {
+                    const saved = localStorage.getItem('servicenow-kb-history');
+                    if (saved) {
+                        const all = JSON.parse(saved);
+                        delete all[deletedId];
+                        localStorage.setItem('servicenow-kb-history', JSON.stringify(all));
+                    }
+                } catch (err) { /* non-critical */ }
                 
                 // Clear editor 
                 currentArticleId = null;
@@ -1030,6 +1110,137 @@
         
         
         // =========================
+        // Version History
+        // =========================
+        /**
+         * Load version history for an article from localStorage.
+         * @param {string} articleId
+         * @returns {Array}
+         */
+        function loadVersionHistory(articleId) {
+            try {
+                const saved = localStorage.getItem('servicenow-kb-history');
+                const all = saved ? JSON.parse(saved) : {};
+                return Array.isArray(all[articleId]) ? all[articleId] : [];
+            } catch (err) {
+                return [];
+            }
+        }
+
+        /**
+         * Persist version history for an article to localStorage.
+         * @param {string} articleId
+         * @param {Array} versions
+         */
+        function saveVersionHistory(articleId, versions) {
+            try {
+                const saved = localStorage.getItem('servicenow-kb-history');
+                const all = saved ? JSON.parse(saved) : {};
+                all[articleId] = versions;
+                localStorage.setItem('servicenow-kb-history', JSON.stringify(all));
+            } catch (err) {
+                // History is non-critical; silently skip quota errors
+            }
+        }
+
+        /**
+         * Capture a version snapshot of the current article state.
+         * Skips if the snapshot is identical to the last saved version.
+         * Trims to a maximum of 5 versions.
+         * @param {{articleId:string, title:string, status:string, category:string, shortDescription:string, content:string}} snapshot
+         */
+        function captureVersionSnapshot(snapshot) {
+            const versions = loadVersionHistory(snapshot.articleId);
+            if (versions.length > 0) {
+                const last = versions[versions.length - 1];
+                if (
+                    last.content === snapshot.content &&
+                    last.title === snapshot.title &&
+                    last.status === snapshot.status &&
+                    last.category === snapshot.category &&
+                    last.shortDescription === snapshot.shortDescription
+                ) {
+                    return; // No changes; skip duplicate snapshot
+                }
+            }
+            versions.push({
+                versionId: crypto.randomUUID(),
+                savedAt: Date.now(),
+                title: snapshot.title,
+                status: snapshot.status,
+                category: snapshot.category,
+                shortDescription: snapshot.shortDescription,
+                content: snapshot.content
+            });
+            // Keep only the last 5 versions
+            if (versions.length > 5) versions.splice(0, versions.length - 5);
+            saveVersionHistory(snapshot.articleId, versions);
+        }
+
+        /**
+         * Open the version history modal for the current article.
+         */
+        function showHistory() {
+            if (!currentArticleId) {
+                alert('No article is currently open.');
+                return;
+            }
+            const versions = loadVersionHistory(currentArticleId);
+            const listEl = document.getElementById('history-list');
+            listEl.innerHTML = '';
+
+            if (versions.length === 0) {
+                listEl.innerHTML = '<p style="color:#7f8c8d;">No saved versions yet.</p>';
+            } else {
+                // Display newest first
+                const reversed = versions.slice().reverse();
+                reversed.forEach((v, idx) => {
+                    const vNum = versions.length - idx;
+                    const dt = new Date(v.savedAt).toLocaleString();
+                    const item = document.createElement('div');
+                    item.className = 'history-item';
+                    item.innerHTML = `
+                        <span>v${vNum} &mdash; ${escapeHtml(dt)}</span>
+                        <button onclick="restoreVersion('${escapeHtml(v.versionId)}')" style="margin:0;">Restore</button>
+                    `;
+                    listEl.appendChild(item);
+                });
+            }
+
+            document.getElementById('history-modal').style.display = 'flex';
+        }
+
+        /**
+         * Restore a specific version of the current article by version ID.
+         * @param {string} versionId
+         */
+        function restoreVersion(versionId) {
+            const versions = loadVersionHistory(currentArticleId);
+            const v = versions.find(ver => ver.versionId === versionId);
+            if (!v) return;
+
+            if (!confirm('Restore this version? The current content will be saved as a new version first.')) return;
+
+            titleInput.value = v.title;
+            categorySelect.value = v.category;
+            statusSelect.value = v.status;
+            shortDescInput.value = v.shortDescription;
+
+            const editor = tinymce.get('article-content');
+            if (editor) editor.setContent(v.content);
+
+            closeHistory();
+            saveCurrentArticle(true);
+        }
+
+        /**
+         * Close the version history modal.
+         */
+        function closeHistory() {
+            document.getElementById('history-modal').style.display = 'none';
+        }
+
+        // =========================
         // UI & Event Handling
         // =========================
         /**
@@ -1039,14 +1250,20 @@
             // New article button
             newArticleBtn.addEventListener('click', createNewArticle);
 
-            // Save button
-            saveBtn.addEventListener('click', saveCurrentArticle);
+            // Save button (manual save — captures version)
+            saveBtn.addEventListener('click', () => saveCurrentArticle(true));
 
             // Delete button
             deleteBtn.addEventListener('click', deleteCurrentArticle);
 
             // Export current article button
             document.getElementById('export-article-btn').addEventListener('click', exportCurrentArticle);
+
+            // History button
+            document.getElementById('history-btn').addEventListener('click', showHistory);
+
+            // History modal close button
+            document.getElementById('history-close-btn').addEventListener('click', closeHistory);
 
             // Export all button
             exportBtn.addEventListener('click', exportArticles);
@@ -1076,11 +1293,11 @@
                 }, 200);
             });
 
-            // Global Ctrl+S / Cmd+S to save
+            // Global Ctrl+S / Cmd+S to save (manual save — captures version)
             document.addEventListener('keydown', e => {
                 if ((e.ctrlKey || e.metaKey) && e.key === 's') {
                     e.preventDefault();
-                    saveCurrentArticle();
+                    saveCurrentArticle(true);
                 }
             });
         }

@@ -2,7 +2,7 @@
 
 A powerful offline Knowledge Base editor for ServiceNow, built with TinyMCE WYSIWYG editor. Create, edit, and manage KB articles without requiring a ServiceNow instance.
 
-![Version](https://img.shields.io/badge/version-4.4-blue.svg)
+![Version](https://img.shields.io/badge/version-4.5-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![TinyMCE](https://img.shields.io/badge/TinyMCE-6.x-orange.svg)
 
@@ -14,7 +14,7 @@ A powerful offline Knowledge Base editor for ServiceNow, built with TinyMCE WYSI
 - **Layout Tools**: Text alignment, lists, tables, and page breaks
 - **Advanced Features**: Links, images, full-screen mode, and source code view
 - **Auto-save**: Debounced auto-save (1 second after last edit) with visual indicators
-- **Keyboard Shortcut**: `Ctrl+S` / `Cmd+S` saves the current article at any time
+- **Keyboard Shortcut**: `Ctrl+S` / `Cmd+S` saves the current article and captures a version snapshot
 
 ### 📝 Article Management
 - **Create Articles**: Generate new KB articles with auto-assigned template IDs (UUID)
@@ -22,7 +22,8 @@ A powerful offline Knowledge Base editor for ServiceNow, built with TinyMCE WYSI
 - **Custom Categories**: Add and remove categories on the fly; built-in defaults are protected
 - **Status Tracking**: Draft, Ready for Review, and Authorized Usage states
 - **Search & Filter**: Debounced search through article titles and descriptions
-- **Delete Articles**: Remove articles with confirmation dialog
+- **Delete Articles**: Remove articles with confirmation dialog; version history is pruned automatically
+- **Version History**: Up to 5 snapshots per article captured on every manual save; browse and restore from the History modal
 
 ### 💾 Data Management
 - **Local Storage**: All data saved in browser localStorage with quota-exceeded alerting
@@ -74,6 +75,7 @@ A powerful offline Knowledge Base editor for ServiceNow, built with TinyMCE WYSI
 - **Search**: Use the search box to find specific articles
 - **Edit**: Make changes in the editor — auto-save and `Ctrl+S` / `Cmd+S` are both available
 - **Delete**: Click the "Delete" button to remove an article
+- **Version History**: Click the **"History"** button in the toolbar to view and restore past versions
 - **Theme Toggle**: Click the moon/sun icon in the top-right to switch between dark and light themes
 
 ### Categories
@@ -131,7 +133,7 @@ snowkb-editor/
 ### Data Storage
 - **Format**: JSON
 - **Location**: Browser localStorage
-- **Keys**: `servicenow-kb-articles` (articles), `servicenow-kb-categories` (custom categories), `theme` (dark/light preference)
+- **Keys**: `servicenow-kb-articles` (articles), `servicenow-kb-categories` (custom categories), `servicenow-kb-history` (version snapshots), `theme` (dark/light preference)
 
 ### Article Schema
 ```json
@@ -163,11 +165,11 @@ snowkb-editor/
 - [x] Export single article
 - [x] Keyboard shortcut (`Ctrl+S`) to save
 - [x] Import sanitization (scripts/event handlers stripped)
+- [x] Version history and tracking (per-article snapshots, restore, max 5)
 - [ ] PDF export functionality
 - [ ] Template system for common article types
 - [ ] Image upload and management
 - [ ] Collaborative editing features
-- [ ] Version history and tracking
 - [ ] Bulk operations (import/export multiple files)
 
 ## 🤝 Contributing
@@ -196,6 +198,6 @@ For issues, questions, or feature requests:
 
 ---
 
-**Version**: 4.4
+**Version**: 4.5
 **Last Updated**: 2026
 **Maintainer**: 7ANG0N1N3
