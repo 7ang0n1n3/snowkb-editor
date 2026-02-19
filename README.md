@@ -169,7 +169,6 @@ snowkb-editor/
 - [ ] PDF export functionality
 - [ ] Template system for common article types
 - [ ] Image upload and management
-- [ ] Collaborative editing features
 - [ ] Bulk operations (import/export multiple files)
 
 ## 🤝 Contributing
