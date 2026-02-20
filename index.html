@@ -11,7 +11,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="application-name" content="ServiceNow KB Offline Editor">
-    <meta name="version" content="4.5">
+    <meta name="version" content="4.6">
     <meta name="description" content="Offline ServiceNow KB editor, using TinyMCE">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ServiceNow KB Offline Editor</title>
@@ -551,7 +551,7 @@
                     editor.on('Change', function() {
                         scheduleAutoSave();
                     });
-                    editor.addShortcut('meta+s', 'Save article', () => saveCurrentArticle(true));
+                    editor.addShortcut('meta+s', 'Save article', () => saveCurrentArticle());
                 }
             });
         }
@@ -626,7 +626,7 @@
             const editor = tinymce.get('article-content');
             if (editor) {
                 // Flush any debounce-pending edits before destroying the editor
-                saveCurrentArticle();
+                saveArticleData();
                 editor.remove();
                 initTinyMCE(skin);
             }
@@ -909,30 +909,18 @@
             }
         }
         /**
-         * Save the currently loaded article with updated fields and content.
-         * @param {boolean} captureVersion - When true, also saves a version snapshot.
+         * Persist the current editor fields to storage without creating a history snapshot.
+         * Called by auto-save and internal flushes — never logs to version history.
          */
-        function saveCurrentArticle(captureVersion = false) {
+        function saveArticleData() {
             if (!currentArticleId) return;
 
             const articleIndex = articles.findIndex(a => a.id === currentArticleId);
             if (articleIndex === -1) return;
 
-            // Get content from TinyMCE
             const editor = tinymce.get('article-content');
             if (!editor) return;
             const content = editor.getContent();
-
-            if (captureVersion) {
-                captureVersionSnapshot({
-                    articleId: currentArticleId,
-                    title: titleInput.value,
-                    category: categorySelect.value,
-                    status: statusSelect.value,
-                    shortDescription: shortDescInput.value,
-                    content: content
-                });
-            }
 
             articles[articleIndex] = {
                 ...articles[articleIndex],
@@ -946,8 +934,29 @@
 
             saveArticlesToStorage();
             renderArticlesList();
+        }
 
-            // Show save confirmation
+        /**
+         * Manual save: captures a version snapshot in history, then persists the article.
+         * Only called by explicit user actions (save button, Ctrl+S, restore).
+         */
+        function saveCurrentArticle() {
+            if (!currentArticleId) return;
+
+            const editor = tinymce.get('article-content');
+            if (!editor) return;
+
+            captureVersionSnapshot({
+                articleId: currentArticleId,
+                title: titleInput.value,
+                category: categorySelect.value,
+                status: statusSelect.value,
+                shortDescription: shortDescInput.value,
+                content: editor.getContent()
+            });
+
+            saveArticleData();
+
             saveIndicator.textContent = 'Saved!';
             setTimeout(() => {
                 saveIndicator.textContent = '';
@@ -961,8 +970,9 @@
             saveIndicator.textContent = 'Editing...';
             clearTimeout(autoSaveTimer);
             autoSaveTimer = setTimeout(() => {
-                saveCurrentArticle();
-            }, 1000);
+                saveArticleData();
+                saveIndicator.textContent = '';
+            }, 30000);
         }
         /**
          * Delete the currently loaded article after confirmation.
@@ -1230,7 +1240,7 @@
             if (editor) editor.setContent(v.content);
 
             closeHistory();
-            saveCurrentArticle(true);
+            saveCurrentArticle();
         }
 
         /**
@@ -1251,7 +1261,7 @@
             newArticleBtn.addEventListener('click', createNewArticle);
 
             // Save button (manual save — captures version)
-            saveBtn.addEventListener('click', () => saveCurrentArticle(true));
+            saveBtn.addEventListener('click', () => saveCurrentArticle());
 
             // Delete button
             deleteBtn.addEventListener('click', deleteCurrentArticle);
@@ -1297,7 +1307,7 @@
             document.addEventListener('keydown', e => {
                 if ((e.ctrlKey || e.metaKey) && e.key === 's') {
                     e.preventDefault();
-                    saveCurrentArticle(true);
+                    saveCurrentArticle();
                 }
             });
         }

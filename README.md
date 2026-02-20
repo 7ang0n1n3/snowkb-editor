@@ -2,7 +2,7 @@
 
 A powerful offline Knowledge Base editor for ServiceNow, built with TinyMCE WYSIWYG editor. Create, edit, and manage KB articles without requiring a ServiceNow instance.
 
-![Version](https://img.shields.io/badge/version-4.5-blue.svg)
+![Version](https://img.shields.io/badge/version-4.6-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![TinyMCE](https://img.shields.io/badge/TinyMCE-6.x-orange.svg)
 
@@ -13,7 +13,7 @@ A powerful offline Knowledge Base editor for ServiceNow, built with TinyMCE WYSI
 - **Text Formatting**: Bold, italic, underline, font family, size, and color controls
 - **Layout Tools**: Text alignment, lists, tables, and page breaks
 - **Advanced Features**: Links, images, full-screen mode, and source code view
-- **Auto-save**: Debounced auto-save (1 second after last edit) with visual indicators
+- **Auto-save**: Debounced auto-save (30 seconds after last edit) — silently persists data without logging a version history entry
 - **Keyboard Shortcut**: `Ctrl+S` / `Cmd+S` saves the current article and captures a version snapshot
 
 ### 📝 Article Management
@@ -73,7 +73,7 @@ A powerful offline Knowledge Base editor for ServiceNow, built with TinyMCE WYSI
 
 - **View Articles**: Click on any article in the sidebar to load it
 - **Search**: Use the search box to find specific articles
-- **Edit**: Make changes in the editor — auto-save and `Ctrl+S` / `Cmd+S` are both available
+- **Edit**: Make changes in the editor — auto-save runs silently every 30 seconds; `Ctrl+S` / `Cmd+S` saves and logs a version
 - **Delete**: Click the "Delete" button to remove an article
 - **Version History**: Click the **"History"** button in the toolbar to view and restore past versions
 - **Theme Toggle**: Click the moon/sun icon in the top-right to switch between dark and light themes
@@ -195,6 +195,6 @@ For issues, questions, or feature requests:
 
 ---
 
-**Version**: 4.5
+**Version**: 4.6
 **Last Updated**: 2026
 **Maintainer**: 7ANG0N1N3
